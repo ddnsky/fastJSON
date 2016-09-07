@@ -4,7 +4,7 @@ using System.Reflection.Emit;
 using System.Reflection;
 using System.Collections;
 using System.Text;
-#if !SILVERLIGHT
+#if ADO_DOTNET
 using System.Data;
 #endif
 using System.Collections.Specialized;
@@ -25,6 +25,7 @@ namespace fastJSON
         String,
         Bool,
         DateTime,
+        TimeSpan,
         Enum,
         Guid,
 
@@ -36,6 +37,8 @@ namespace fastJSON
         StringDictionary,
 #if !SILVERLIGHT
         Hashtable,
+#endif
+#if ADO_DOTNET
         DataSet,
         DataTable,
 #endif
@@ -203,6 +206,7 @@ namespace fastJSON
             else if (t == typeof(string)) d_type = myPropInfoType.String;
             else if (t == typeof(bool) || t == typeof(bool?)) d_type = myPropInfoType.Bool;
             else if (t == typeof(DateTime) || t == typeof(DateTime?)) d_type = myPropInfoType.DateTime;
+            else if( t == typeof( TimeSpan ) || t == typeof( TimeSpan? ) ) d_type = myPropInfoType.TimeSpan;
             else if (t.IsEnum) d_type = myPropInfoType.Enum;
             else if (t == typeof(Guid) || t == typeof(Guid?)) d_type = myPropInfoType.Guid;
             else if (t == typeof(StringDictionary)) d_type = myPropInfoType.StringDictionary;
@@ -225,6 +229,8 @@ namespace fastJSON
             }
 #if !SILVERLIGHT
             else if (t == typeof(Hashtable)) d_type = myPropInfoType.Hashtable;
+#endif
+#if ADO_DOTNET
             else if (t == typeof(DataSet)) d_type = myPropInfoType.DataSet;
             else if (t == typeof(DataTable)) d_type = myPropInfoType.DataTable;
 #endif

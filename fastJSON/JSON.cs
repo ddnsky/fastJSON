@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-#if !SILVERLIGHT
+#if ADO_DOTNET
 using System.Data;
 #endif
 using System.Globalization;
 using System.IO;
 using System.Collections.Specialized;
+//using System.Runtime.Remoting.Messaging;
 
 namespace fastJSON
 {
@@ -357,7 +358,7 @@ namespace fastJSON
             object o = new JsonParser(json).Decode();
             if (o == null)
                 return null;
-#if !SILVERLIGHT
+#if ADO_DOTNET
             if (type != null && type == typeof(DataSet))
                 return CreateDataset(o as Dictionary<string, object>, null);
             else if (type != null && type == typeof(DataTable))
@@ -436,6 +437,8 @@ namespace fastJSON
 
             else if (conversionType == typeof(DateTime))
                 return CreateDateTime((string)value);
+            else if( conversionType == typeof( TimeSpan ) )
+                return CreateTimeSpan( (string)value );
 
             else if (conversionType == typeof(DateTimeOffset))
                 return CreateDateTimeOffset((string)value);
@@ -687,9 +690,11 @@ namespace fastJSON
                                 // what about 'else'?
                                 break;
                             case myPropInfoType.ByteArray: oset = Convert.FromBase64String((string)v); break;
-#if !SILVERLIGHT
+#if ADO_DOTNET
                             case myPropInfoType.DataSet: oset = CreateDataset((Dictionary<string, object>)v, globaltypes); break;
                             case myPropInfoType.DataTable: oset = CreateDataTable((Dictionary<string, object>)v, globaltypes); break;
+#endif
+#if !SILVERLIGHT
                             case myPropInfoType.Hashtable: // same case as Dictionary
 #endif
                             case myPropInfoType.Dictionary: oset = CreateDictionary((List<object>)v, pi.pt, pi.GenericTypes, globaltypes); break;
@@ -828,6 +833,32 @@ namespace fastJSON
                 return new DateTime(year, month, day, hour, min, sec, ms, DateTimeKind.Utc).ToLocalTime();
         }
 
+        private TimeSpan CreateTimeSpan(string value) {
+            //                   0123456789012345678 9012 9/3
+            // datetime format = yyyy-MM-ddTHH:mm:ss .nnn  
+            bool neg = false;
+            int days;
+            int hours;
+            int mins;
+            int secs;
+            int mss = 0;
+
+            days = CreateInteger( value, 0, 5 );
+            if (days < 0) {
+                neg = true;
+                days = -days;
+            }
+            hours = CreateInteger( value, 6, 2 );
+            mins = CreateInteger( value, 9, 2 );
+            secs = CreateInteger( value, 12, 2 );
+            if( value.Length > 16 && value[14] == '.' )
+                mss = CreateInteger( value, 15, 3 );
+            var res = new TimeSpan( days, hours, mins, secs, mss );
+            if (neg)
+                res.Negate();
+            return res;
+        }
+
         private object CreateArray(List<object> data, Type pt, Type bt, Dictionary<string, object> globalTypes)
         {
             if (bt == null)
@@ -954,7 +985,7 @@ namespace fastJSON
             return col;
         }
 
-#if !SILVERLIGHT
+#if ADO_DOTNET
         private DataSet CreateDataset(Dictionary<string, object> reader, Dictionary<string, object> globalTypes)
         {
             DataSet ds = new DataSet();

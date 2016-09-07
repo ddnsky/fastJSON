@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-#if !SILVERLIGHT
+#if ADO_DOTNET
 using System.Data;
 #endif
 using System.Globalization;
@@ -97,6 +97,8 @@ namespace fastJSON
 
             else if (obj is DateTime)
                 WriteDateTime((DateTime)obj);
+            else if( obj is TimeSpan )
+                WriteTimeSpan( (TimeSpan)obj );
 
             else if (obj is DateTimeOffset)
                 WriteDateTimeOffset((DateTimeOffset)obj);
@@ -111,7 +113,7 @@ namespace fastJSON
 #endif
             else if (obj is IDictionary)
                 WriteDictionary((IDictionary)obj);
-#if !SILVERLIGHT
+#if ADO_DOTNET
             else if (obj is DataSet)
                 WriteDataset((DataSet)obj);
 
@@ -253,6 +255,20 @@ namespace fastJSON
             _output.Append('\"');
         }
 
+        private void WriteTimeSpan( TimeSpan sp ) {
+            _output.Append( '\"' );
+            _output.Append( sp.Days.ToString( "00000", NumberFormatInfo.InvariantInfo ) );
+            _output.Append( '.' ); // strict ISO date compliance 
+            _output.Append( sp.Hours.ToString( "00", NumberFormatInfo.InvariantInfo ) );
+            _output.Append( ':' );
+            _output.Append( sp.Minutes.ToString( "00", NumberFormatInfo.InvariantInfo ) );
+            _output.Append( ':' );
+            _output.Append( sp.Seconds.ToString( "00", NumberFormatInfo.InvariantInfo ) );
+            _output.Append( '.' );
+            _output.Append( sp.Milliseconds.ToString( "000", NumberFormatInfo.InvariantInfo ) );
+            _output.Append( '\"' );
+        }
+
         private void write_date_value(DateTime dt)
         {
             _output.Append('\"');
@@ -274,7 +290,7 @@ namespace fastJSON
             }
         }
 
-#if !SILVERLIGHT
+#if ADO_DOTNET
         private DatasetSchema GetSchema(DataTable ds)
         {
             if (ds == null) return null;
